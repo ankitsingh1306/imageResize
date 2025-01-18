@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Resizer</title>
+    <style>
+        body {
+            font-family: 'Poppins', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: #eceff1;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #nmm {
+            font-size: 1.2rem;
+            color: #00d4ff;
+            font-weight: 500;
+            text-align: center;
+            margin-top: 30px;
+            letter-spacing: 1px;
+            transition: color 0.3s ease;
+        }
+
+        #nmm:hover {
+            color: #0072ff;
+            cursor: pointer;
+        }
+
+        .container {
+            background: #1c2530;
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 450px;
+            width: 100%;
+            margin: 0 auto;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 1s ease-out;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+            color: #00d4ff;
+        }
+
+        #drop-area {
+            border: 2px dashed #90caf9;
+            border-radius: 10px;
+            padding: 40px 20px;
+            background: rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+            min-height: 200px;
+            /* Ensures enough height for image and text */
+        }
+
+        #drop-area.drag-over {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
+        }
+
+        #drop-area p {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #00d4ff;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            margin: 0;
+            pointer-events: none;
+            /* Ensures the text doesn't interfere with drag/drop */
+        }
+
+        #preview {
+            max-width: 100%;
+            max-height: 100%;
+            margin-top: 10px;
+            display: none;
+            /* Hidden until an image is uploaded */
+            border-radius: 10px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            /* Ensures the image appears above the text */
+        }
+
+        #drop-area img.show {
+            display: block;
+            /* Displays the image after upload */
+        }
+
+        label {
+            font-weight: 600;
+            margin: 10px 0 5px;
+            color: #90caf9;
+        }
+
+        input,
+        button {
+            width: 100%;
+            margin: 10px 0;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', Arial, sans-serif;
+        }
+
+        input {
+            background-color: #263238;
+            color: #eceff1;
+        }
+
+        input::placeholder {
+            color: #a1b0c7;
+        }
+
+        button {
+            background: linear-gradient(to right, #00d4ff, #0072ff);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #result {
+            margin-top: 20px;
+        }
+
+        #output-image {
+            max-width: 100%;
+            margin-top: 10px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Photo Resizer</h1>
+        <div id="drop-area">
+            <p>Drag & Drop an image or click to select</p>
+            <input type="file" id="image" name="image" accept="image/*" style="display:none;">
+            <img id="preview" src="/Drag Drop.png" alt="Image Preview">
+        </div>
+
+        <form id="resize-form">
+            <label for="width">Width (px):</label>
+            <input type="number" id="width" name="width" placeholder="Enter width..." required>
+
+            <label for="height">Height (px):</label>
+            <input type="number" id="height" name="height" placeholder="Enter height..." required>
+
+            <button type="button" id="resize-button">Resize Image</button>
+        </form>
+
+        <div id="result">
+            <h3>Resized Image:</h3>
+            <img id="output-image" src="" alt="Your resized image will appear here.">
+            <button id="download-button" style="display:none;">Download Resized Image</button>
+        </div>
+    </div>
+    <p id="nmm">Made by Ankit Singh</p>
+
+    <script>
+        const dropArea = document.getElementById("drop-area");
+        const fileInput = document.getElementById("image");
+        const preview = document.getElementById("preview");
+
+        dropArea.addEventListener("click", () => fileInput.click());
+
+        dropArea.addEventListener("dragover", (event) => {
+            event.preventDefault();
+            dropArea.classList.add("drag-over");
+        });
+
+        dropArea.addEventListener("dragleave", () => {
+            dropArea.classList.remove("drag-over");
+        });
+
+        dropArea.addEventListener("drop", (event) => {
+            event.preventDefault();
+            dropArea.classList.remove("drag-over");
+            const file = event.dataTransfer.files[0];
+            if (file && file.type.startsWith("image/")) {
+                previewImage(file);
+                fileInput.files = event.dataTransfer.files;
+            } else {
+                alert("Please upload a valid image file.");
+            }
+        });
+
+        fileInput.addEventListener("change", () => {
+            const file = fileInput.files[0];
+            if (file) {
+                previewImage(file);
+            }
+        });
+
+        function previewImage(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                preview.src = e.target.result;
+                preview.style.display = "block";
+            };
+            reader.readAsDataURL(file);
+        }
+
+        document.getElementById("resize-button").addEventListener("click", function () {
+            const form = document.getElementById("resize-form");
+            const formData = new FormData(form);
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Please upload an image first.");
+                return;
+            }
+
+            formData.append("image", file); // Append the image file to the form data
+
+            fetch("resize.php", {
+                method: "POST",
+                body: formData,
+            })
+                .then((response) => response.blob())
+                .then((blob) => {
+                    const img = document.getElementById("output-image");
+                    img.src = URL.createObjectURL(blob);
+
+                    const downloadButton = document.getElementById("download-button");
+                    downloadButton.style.display = "inline-block";
+                    downloadButton.onclick = () => {
+                        const link = document.createElement("a");
+                        link.href = URL.createObjectURL(blob);
+                        link.download = "resized_image.jpg";
+                        link.click();
+                    };
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                    alert("Something went wrong. Please try again.");
+                });
+        });
+    </script>
+</body>
+
+</html>
